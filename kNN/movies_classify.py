@@ -1,5 +1,6 @@
 from numpy import *
 import operator
+import matplotlib.pyplot as plt
 
 
 def create_data_set():
@@ -38,3 +39,26 @@ def classify(in_x, data_set, labels, k):
     sorted_class_count = sorted(class_count.items(),
                                 key=operator.itemgetter(1), reverse=True)
     return sorted_class_count[0][0]
+
+
+def draw_movies_figure(data_set, classify_set, ret):
+    """
+    绘制电影问题的散点图
+    :param data_set: 训练数据集
+    :param classify_set: 分类向量
+    :param ret: 分类结果
+    :return:
+    """
+    fig = plt.figure()
+    ax = fig.add_subplot(1, 1, 1)
+    ax.set_title('kNN（电影分类问题）', fontsize=8)
+    ax.set_xlim(0, 120)
+    ax.set_xlabel('打斗次数', fontsize=8)
+    ax.set_ylim(0, 120)
+    ax.set_ylabel('接吻次数', fontsize=8)
+    ax.scatter(data_set[:, 0], data_set[:, 1], s=4)
+    ax.scatter(classify_set[0], classify_set[1], c='r', s=4)
+    if ret == 'A':
+        ax.text(80, 100, '影片分类结果：\n当前影片为爱情片', fontdict={'size': 8})
+    elif ret == 'B':
+        ax.text(80, 100, '影片分类结果：\n当前影片为动作片', fontdict={'size': 8})
