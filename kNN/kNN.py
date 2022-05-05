@@ -1,11 +1,14 @@
 import movies_classify as mc
 import engagement as eng
+import digit_detection as dd
 import matplotlib.pyplot as plt
 
 
 # 主程序入口
 if __name__ == '__main__':
-    """ 电影问题 """
+    """ 
+    电影问题 
+    """
     # 获取电影问题训练数据集与标签
     movies_group, movies_labels = mc.create_data_set()
     # 画出训练数据集分布
@@ -14,7 +17,9 @@ if __name__ == '__main__':
     class_ret = mc.classify(classify_set, data_set=movies_group, labels=movies_labels, k=3)
     mc.draw_movies_figure(movies_group, classify_set, class_ret)
 
-    """ 网站约会问题 """
+    """ 
+    网站约会问题 
+    """
     # 创建数据集
     eng.create_data_set(1000, eng.data_set_file)
     # 读取数据
@@ -25,5 +30,9 @@ if __name__ == '__main__':
     eng.engagement_test()
     # 分类
     eng.classify_person()
+
+    """ 数字识别 """
+    error_ratio = dd.hand_writing_test()
+    print('The total error ratio is %f' % error_ratio)
 
     plt.show()
