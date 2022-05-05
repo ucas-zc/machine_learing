@@ -156,3 +156,26 @@ def create_data():
     game_time_ratio = random.randint(0, 100)
     ice_cream = random.randint(0, 200) / float(100)
     return journey, game_time_ratio, ice_cream
+
+
+def classify_person():
+    """
+    网站推荐
+    :return:
+    """
+    # 输出结果
+    result_list = ['not at all', 'in small does', 'in large does']
+    # 构造一条样本
+    journey, game_time_ratio, ice_cream = create_data()
+    print('The message of this person: %d, %d, %f'
+          % (journey, game_time_ratio, ice_cream))
+    # 样本向量
+    in_x = array([journey, game_time_ratio, ice_cream])
+    # 读取数据
+    data_set, data_labels = file2matrix(data_set_file)
+    # 归一化处理
+    norm_set, ranges, min_vals = auto_norm(data_set)
+    # 分类
+    classify_ret = classify(in_x, norm_set, data_labels, 3)
+    print('You will probably like this person：',
+          result_list[data_labels[classify_ret - 1]])

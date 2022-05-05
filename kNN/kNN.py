@@ -23,5 +23,7 @@ if __name__ == '__main__':
     eng.draw_engagement_figure(ret_mat, class_label)
     # 测试
     eng.engagement_test()
+    # 分类
+    eng.classify_person()
 
     plt.show()
