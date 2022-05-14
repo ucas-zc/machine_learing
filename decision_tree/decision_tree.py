@@ -1,5 +1,12 @@
+import pickle
 from numpy import *
 import operator
+import matplotlib.pyplot as plt
+
+
+decision_node = dict(boxstyle='sawtooth', fc='0.8')
+leaf_node = dict(boxstyle='round4', fc='0.8')
+arrow_args = dict(arrowstyle='<-')
 
 
 def create_data_set():
@@ -136,4 +143,165 @@ def create_decision_tree(data_set, labels):
         sub_labels = labels[:]
         my_tree[best_label][value] = create_decision_tree(split_data_set(
             data_set, best_feature, value), sub_labels)
+    return my_tree
+
+
+def get_num_of_leafs(my_tree):
+    """
+    获取树的叶子结点个数
+    :param my_tree: 决策树
+    :return: 叶子结点个数
+    """
+    num = 0
+    # 获取第一个key
+    first_str = list(my_tree.keys())[0]
+    second_dict = my_tree[first_str]
+    # 循环遍历这颗子树上的结点
+    for tmp in second_dict.keys():
+        # 当前结点为元组类型，则不为叶节点，递归计算
+        if type(second_dict[tmp]).__name__ == 'dict':
+            num += get_num_of_leafs(second_dict[tmp])
+        else:
+            num += 1
+    return num
+
+
+def get_tree_depth(my_tree):
+    """
+    获取树的深度
+    :param my_tree: 树深度
+    :return:
+    """
+    depth = 0
+    first_str = list(my_tree.keys())[0]
+    second_dict = my_tree[first_str]
+    for tmp in second_dict.keys():
+        # 当前结点为元组类型，递归计算树深度
+        if type(second_dict[tmp]).__name__ == 'dict':
+            this_depth = 1 + get_num_of_leafs(second_dict[tmp])
+        else:
+            this_depth = 1
+        if this_depth > depth:
+            depth = this_depth
+    return depth
+
+
+def plot_mid_text(cnt_pt, parent_pt, mid_text):
+    """
+    添加节点连接信息
+    :param cnt_pt: 子节点坐标
+    :param parent_pt: 父节点坐标
+    :param mid_text: 节点连接信息
+    :return:
+    """
+    x_mid = (parent_pt[0] - cnt_pt[0]) / 2.0 + cnt_pt[0]
+    y_mid = (parent_pt[1] - cnt_pt[1]) / 2.0 + cnt_pt[1]
+    create_plot.axl.text(x_mid, y_mid, mid_text)
+
+
+def create_plot(in_tree):
+    """
+    绘图
+    :param in_tree:
+    :return:
+    """
+    fig = plt.figure(1, facecolor='white')
+    fig.clf()
+    axprops = dict(xticks=[], yticks=[])
+    create_plot.axl = plt.subplot(111, frameon=False, **axprops)
+    plot_tree.total_w = float(get_num_of_leafs(in_tree))
+    plot_tree.total_d = float(get_tree_depth(in_tree))
+    plot_tree.x_off = -0.5 / plot_tree.total_w
+    plot_tree.y_off = 1.0
+    plot_tree(in_tree, (0.5, 1.0), '')
+    plt.show()
+
+
+def plot_tree(my_tree, parent_pt, node_text):
+    """
+    绘制决策树的图形
+    :param my_tree: 树根节点
+    :param parent_pt: 父节点
+    :param node_text: 节点标注
+    :return:
+    """
+    # 获取树的叶节点个数和深度
+    num_of_leafs = get_num_of_leafs(my_tree)
+    first_str = list(my_tree.keys())[0]
+    # 计算第一个子结点的坐标
+    cnt_pt = (plot_tree.x_off + (1.0 + float(num_of_leafs)) / 2.0
+              / plot_tree.total_w, plot_tree.y_off)
+    plot_mid_text(cnt_pt, parent_pt, node_text)
+    plot_node(first_str, cnt_pt, parent_pt, decision_node)
+    second_dict = my_tree[first_str]
+    plot_tree.y_off = plot_tree.y_off - 1.0 / plot_tree.total_d
+    # 循环绘制
+    for tmp in second_dict.keys():
+        if type(second_dict[tmp]).__name__ == 'dict':
+            plot_tree(second_dict[tmp], cnt_pt, str(tmp))
+        else:
+            plot_tree.x_off = plot_tree.x_off + 1.0 / plot_tree.total_w
+            plot_node(second_dict[tmp], (plot_tree.x_off, plot_tree.y_off),
+                      cnt_pt, leaf_node)
+            plot_mid_text((plot_tree.x_off, plot_tree.y_off), cnt_pt, str(tmp))
+    plot_tree.y_off = plot_tree.y_off + 1.0 / plot_tree.total_d
+
+
+def plot_node(node_text, center_pt, parent_pt, node_type):
+    """
+    绘制节点
+    :param node_text: 节点标签
+    :param center_pt: 子结点坐标
+    :param parent_pt: 父节点坐标
+    :param node_type: 节点类型信息
+    :return: 
+    """
+    create_plot.axl.annotate(node_text, xy=parent_pt, xycoords='axes fraction',
+                             xytext=center_pt, textcoords='axes fraction',
+                             va='center', ha='center', bbox=node_type,
+                             arrowprops=arrow_args)
+
+
+def classify(input_tree, feat_labels, vec):
+    """
+    分类函数
+    :param input_tree: 决策树
+    :param feat_labels: 特征
+    :param vec: 待分类向量
+    :return:
+    """
+    first_node = list(input_tree.keys())[0]
+    second_node = input_tree[first_node]
+    feat_index = feat_labels.index(first_node)
+    for key_tmp in second_node.keys():
+        if vec[feat_index] == key_tmp:
+            if type(second_node[key_tmp]).__name__ == 'dict':
+                classify(second_node[key_tmp], feat_labels, vec)
+            else:
+                global class_label
+                class_label = second_node[key_tmp]
+    return class_label
+
+
+def store_tree(my_tree, file_name):
+    """
+    存储决策树
+    :param my_tree: 决策树
+    :param file_name: 文件名
+    :return: None
+    """
+    fw = open(file_name, 'wb')
+    pickle.dump(my_tree, fw)
+    fw.close()
+
+
+def load_tree(file_name):
+    """
+    加载决策树
+    :param file_name: 文件名
+    :return: 决策树
+    """
+    fw = open(file_name, 'rb')
+    my_tree = pickle.load(fw)
+    fw.close()
     return my_tree
